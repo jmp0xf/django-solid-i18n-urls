@@ -44,6 +44,8 @@ class SolidLocaleMiddleware(LocaleMiddleware):
             language = language_path or self.default_lang
         else:
             language = trans.get_language_from_request(request, check_path)
+        if request.META.get('HTTP_USER_AGENT') and 'baiduspider' in request.META['HTTP_USER_AGENT'].lower() and not language_path:
+            language = 'zh-hans'
         set_language_from_path(language_path)
         trans.activate(language)
         request.LANGUAGE_CODE = trans.get_language()
@@ -111,6 +113,9 @@ class SolidLocaleMiddleware(LocaleMiddleware):
                 '%s%s/' % (script_prefix, language) if language else script_prefix,
                 1
             )
+            # set 301 permanent redirect for baidu spider
+            if request.META.get('HTTP_USER_AGENT') and 'baiduspider' in request.META['HTTP_USER_AGENT'].lower():
+                is_permanent = True
 
             # return a 301 permanent redirect if on default language
             if (is_permanent):
